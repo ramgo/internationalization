@@ -5,7 +5,6 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -14,103 +13,17 @@ import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.FileAppender;
-import org.apache.log4j.Layout;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.w3c.dom.Node;
 
 
 public class Util
 {
-	/**
-	 * Save rendered webpage
-	 */
-	public static File saveHTMLPage(String urlString, String path) throws IOException
-	{
-		// wget to save html page
-		Runtime runtime = Runtime.getRuntime();
-		Process p = runtime.exec("wget -p -k -E -nd -P " + path + " " + urlString);
-		try
-		{
-			p.waitFor();
-		}
-		catch (InterruptedException e)
-		{
-			e.printStackTrace();
-		}
-
-		File savedHTML = new File(getSavedFilePath(path));
-		return savedHTML;
-	}
-
-	public static void saveHTMLPageWindows(String urlString, String path, String fileName, boolean doNotOverwrite) throws IOException
-	{
-		File file = new File(path + File.separatorChar + fileName);
-		
-		// check if overwrite=false and file exists and is not empty. Do not overwrite if the file seems proper
-		if(doNotOverwrite && file.exists() && file.length() > 0)
-		{
-			return;
-		}
-		
-		Document doc = Jsoup.connect(urlString).get();
-		
-		//fix position to absolute
-		//Element root = doc.select("html").first();
-		//root.attr("style", "position:absolute");
-
-		// check for relative urls (href, src, action, background, url)
-		ArrayList<String> htmlRelativeUrlsTagsAttributes = Constants.getHtmlRelativeUrlsTagsAttributes();
-		for (String attribute : htmlRelativeUrlsTagsAttributes)
-		{
-			for (Element element : doc.select("[" + attribute + "]"))
-			{
-				element.attr(attribute, element.absUrl(attribute));
-			}
-		}
-
-		file.createNewFile();
-		doc.outputSettings().prettyPrint(false);
-		//doc.outputSettings().escapeMode(Entities.EscapeMode.extended);
-		String html = doc.html();		
-		PrintWriter out = new PrintWriter(file);
-		out.print(html);
-		out.close();
-	}
-
-	private static String getSavedFilePath(String path)
-	{
-		File target = new File(path);
-		String fileName = Constants.MATCH_FILE;
-
-		if (target != null && target.isDirectory())
-		{
-			for (File f : target.listFiles())
-			{
-				if (f.isFile())
-				{
-					Pattern p = Pattern.compile(fileName);
-					Matcher m = p.matcher(f.getName());
-					if (m.find())
-						return f.getAbsolutePath();
-				}
-			}
-		}
-		return "";
-	}
-
 	/**
 	 * Given an HTML element, retrieve its XPath
 	 * 
@@ -560,15 +473,6 @@ public class Util
 		return (double) time/1000000000.0;
 	}
 	
-	public static Logger getNewLogger(String filePathWithName, String loggerName) throws IOException
-	{
-		Logger log = org.apache.log4j.Logger.getLogger(loggerName);
-		PatternLayout layout = new PatternLayout(Layout.LINE_SEP + "%m");
-	    FileAppender appender = new FileAppender(layout, filePathWithName, true);    
-	    log.addAppender(appender);
-	    return log;
-	}
-
 	public static org.w3c.dom.Element getW3CElementFromXPathJava(String xPath, org.w3c.dom.Document doc) throws IOException
 	{
 		String xPathArray[] = xPath.split("/");
@@ -723,8 +627,4 @@ public class Util
 		return ((original - current)/original) * 100.0 >= Constants.RCA_NUMERIC_ANALYSIS_REDUCTION_IN_DIFFERENCE_PIXELS_THRESHOLD_PERCENTAGE;
 	}
 	
-	public static void main(String[] args) throws IOException
-	{
-		System.out.println(Util.getTotalNumberOfHtmlElementsInPage("C:\\USC\\visual_checking\\evaluation\\real_data\\crawller_designs\\test3\\test.html"));
-	}
 }

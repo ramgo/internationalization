@@ -26,6 +26,8 @@ public class HtmlDomTree
 	private HtmlAttributesParser htmlAttributesParser;
 	FontAnalyser fontanalyser;
 	WebDriver driver;
+	public static final String[] NON_VISUAL_TAGS = new String[] {"head", "script", "link", "meta", "style"};
+	
 	public HtmlDomTree(WebDriver driver, String htmlFileFullPath) throws SAXException, IOException
 	{
 		// parse CSS
@@ -104,7 +106,7 @@ public class HtmlDomTree
 				
 				// don't process elements with no visual impact
 				//if(x >= 0 && y >= 0 && w > 0 && h > 0)
-				if(!Arrays.asList(Constants.NON_VISUAL_TAGS).contains(child.getTagName()))
+				if(!Arrays.asList(NON_VISUAL_TAGS).contains(child.getTagName()))
 				{
 					HtmlElement newChild = new HtmlElement();
 					
@@ -310,6 +312,16 @@ public class HtmlDomTree
 		preOrderTraversalRTree(this.root);
 	}
 	
+	private boolean elementOverflows (int fw, int fh, int w, int h) {
+		
+		if(w == 0 || h == 0)
+			return false;
+		
+		if(fw > w || fh > h) 
+			return true;
+		
+		return false;
+	}
 	private void preOrderTraversalRTree(Node<HtmlElement> node)
 	{
 		if (node == null) {
@@ -318,22 +330,23 @@ public class HtmlDomTree
 		}
 		String text=node.getData().getText();
 		String xpath =  node.getData().getXpath();
+		//String fixedness = driver.findElement(By.xpath(xpath)).getCssValue("width")
 		String fsize = driver.findElement(By.xpath(xpath)).getCssValue("font-size");
 				
 //		for (String key: node.getData().getCssProperties().keySet() ) {
 //			System.out.println("k: " + key +  " v: " + node.getData().getCssProperties().get(key) );
 //		}
 
-		//RAMGO
 		if (text!=null && !text.isEmpty() && text != " ") {
 			text = text.trim();
 			String singleLineText = text.replace('\n', ' ');
 			boolean containsHTML = singleLineText.matches(".*\\<[^>]+>.*");
 			if (containsHTML) {
 				//System.out.println("contains " + text);
+				//DO NOTHING
 			}
 			else {
-				System.out.println("not html " + text + " size " + fsize);
+				//System.out.println(text + " size " + fsize);
 				int lastIdx = 0;
 				int fontSize = 0;
 				if(fsize != null) {
@@ -341,19 +354,21 @@ public class HtmlDomTree
 					if (lastIdx == -1) 
 						lastIdx = 0;
 					fontSize = (int)Double.parseDouble(fsize.substring(0,lastIdx));
-//					System.out.println("FONTSIZE " + fsize);
 				}
 				
-				Dimension d = fontanalyser.getTextDimenesion(text, "Arial", 13, Font.PLAIN) ;
+				Dimension d = fontanalyser.getTextDimenesion(text, "Arial", fontSize, Font.PLAIN) ;
 				if(!text.equalsIgnoreCase("&nbsp;")) {
-					System.out.println(node.getData().getTagName() + ": " + text
-							//+ " X: " + node.getData().getX() + " Y:"
-							//+ node.getData().getY()
-							+ " height: " + node.getData().getHeight() 
-							+ " Width: " + node.getData().getWidth()
-							+ " fontHeight: " + d.height
-							+ " fontWidth: " + d.width
-							);	
+					text = text.replaceAll("&nbsp;", " ");
+					
+					if (elementOverflows(d.width, d.height, node.getData()
+							.getWidth(), node.getData().getHeight())) {
+						
+						System.out.println(text
+								+ " height: " + node.getData().getHeight()
+								+ " Width: " + node.getData().getWidth()
+								+ " fontHeight: " + d.height + " fontWidth: "
+								+ d.width);
+					}
 				}
 			}
 
