@@ -25,11 +25,13 @@ public class HtmlDomTree
 	private CSSParser cssParser;
 	private HtmlAttributesParser htmlAttributesParser;
 	FontAnalyser fontanalyser;
+	WebDriver driver;
 	public HtmlDomTree(WebDriver driver, String htmlFileFullPath) throws SAXException, IOException
 	{
 		// parse CSS
+		this.driver = driver;
 		cssParser = new CSSParser(htmlFileFullPath);
-		cssParser.parseCSS();
+		cssParser.parseCSSWithInheritance();
 //		
 		// parse HTML attributes
 		htmlAttributesParser = new HtmlAttributesParser(htmlFileFullPath);
@@ -315,10 +317,16 @@ public class HtmlDomTree
 			return;
 		}
 		String text=node.getData().getText();
-		String fsize = node.getData().getCssProperties().get("font-size");
+		String xpath =  node.getData().getXpath();
+		String fsize = driver.findElement(By.xpath(xpath)).getCssValue("font-size");
+				
+//		for (String key: node.getData().getCssProperties().keySet() ) {
+//			System.out.println("k: " + key +  " v: " + node.getData().getCssProperties().get(key) );
+//		}
+		
 		int fontSize = 0;
 		if(fsize != null) {
-			fontSize = Integer.parseInt(fsize.substring(0, fsize.indexOf('.')));
+			fontSize = Integer.parseInt(fsize.substring(0, fsize.indexOf('p')));
 			System.out.println("FONTSIZE " + fsize);
 		}
 		//RAMGO
@@ -330,9 +338,9 @@ public class HtmlDomTree
 				//System.out.println("contains " + text);
 			}
 			else {
-				System.out.println("no html " + text + " size " + fontSize);
+				System.out.println("not html " + text + " size " + fsize);
 			}
-//			Dimension d = fontanalyser.getTextDimenesion(text, "Arial", 10, Font.PLAIN) ;
+//			Dimension d = fontanalyser.getTextDimenesion(text, "Arial", 13, Font.PLAIN) ;
 //			if(!containsHTML && text.equalsIgnoreCase("&nbsp;")) {
 //				System.out.println(node.getData().getTagName() + ": " + text
 //						//+ " X: " + node.getData().getX() + " Y:"

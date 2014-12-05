@@ -62,7 +62,7 @@ public class CSSParser
     	parse();
     	
     	// don't include inherited properties
-    	styleMap = CSSFactory.assignDOM(doc, createBaseFromFilename(fileFullPath), "screen", true);
+    	styleMap = CSSFactory.assignDOM(doc, createBaseFromFilename(fileFullPath), "screen", false);
     }
     
     private static URL createBaseFromFilename(String filename) {

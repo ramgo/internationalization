@@ -6,10 +6,10 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
-import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.DesiredCapabilities;
@@ -18,13 +18,13 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 
 public class WebDriverSingleton
 {
-	private static WebDriverSingleton instance = null;
-	private static WebDriver driver = null;
+	static WebDriverSingleton instance = null;
+	static WebDriver driver = null;
 	
 	private WebDriverSingleton()
 	{
 		if(Constants.WEBDRIVER_BROWSER.equalsIgnoreCase("FIREFOX"))
-		{
+		{ 
 			driver = new FirefoxDriver();
 		}
 		else
