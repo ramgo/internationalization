@@ -17,6 +17,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.firefox.FirefoxDriver;
 import org.xml.sax.SAXException;
 
 public class HtmlDomTree
@@ -27,13 +28,16 @@ public class HtmlDomTree
 	private CSSParser cssParser;
 	private HtmlAttributesParser htmlAttributesParser;
 	FontAnalyser fontanalyser;
-	WebDriver driver;
+	static WebDriver driver;
+	WebDriver oracle;
+	int oracleHeight,oracleWidth;
 	public static final String[] NON_VISUAL_TAGS = new String[] {"head", "script", "link", "meta", "style"};
 	
-	public HtmlDomTree(WebDriver driver, String htmlFileFullPath) throws SAXException, IOException
+	public HtmlDomTree(WebDriver driver,WebDriver oracle, String htmlFileFullPath,String oracleFileFullPath) throws SAXException, IOException
 	{
 		// parse CSS
 		this.driver = driver;
+		this.oracle=oracle;
 		cssParser = new CSSParser(htmlFileFullPath);
 		cssParser.parseCSS();
 //		
@@ -388,7 +392,16 @@ public class HtmlDomTree
 					
 					if (elementOverflows(d.width, d.height, node.getData()
 							.getWidth(), node.getData().getHeight())) {
-						
+						try{
+						oracleHeight=oracle.findElement(By.xpath(node.getData().getXpath())).getSize().height;
+						oracleWidth=oracle.findElement(By.xpath(node.getData().getXpath())).getSize().width;
+						}catch(Exception e){
+							System.out.println("Missing Xpath from Oracle");
+						}
+						System.out.println("Oracle H,W "+ oracleHeight+oracleWidth+ "testedElement H,W: "+ node.getData().getHeight()+node.getData().getWidth());
+						if(elementOverflows(node.getData().getWidth(),node.getData().getHeight(), oracleWidth,oracleHeight)){
+							System.out.println("Possilble word wrapping for: "+text);
+						}
 						System.out.println(text
 								+ " height: " + node.getData().getHeight()
 								+ " Width: " + node.getData().getWidth()
@@ -415,10 +428,14 @@ public class HtmlDomTree
 		long start = System.currentTimeMillis();
 		WebDriverSingleton instance = WebDriverSingleton.getInstance();
 		// String prefix = "C:\\Users\\Soumili\\Documents\\GitHub\\internationalization\\page1.html";
-		String prefix = "C:\\Users\\ramgo\\Downloads\\internationalization\\page1.html";
+		//String prefix = "C:\\Users\\ramgo\\Downloads\\internationalization\\page1.html";	
+		String prefix = "C:\\Users\\Ali\\Documents\\internationalization\\page1.html";
+		String prefix2 = "file:///C:\\Users\\Ali\\Documents\\internationalization\\oracle.html";
 		instance.loadPage(prefix);
+		WebDriver driver2 = new FirefoxDriver();
+		driver2.get(prefix2);
 		WebDriver driver = instance.getDriver();
-		HtmlDomTree rt = new HtmlDomTree(driver, prefix);
+		HtmlDomTree rt = new HtmlDomTree(driver, driver2,prefix,prefix2);
 		rt.buildHtmlDomTree();
 		rt.preOrderTraversalRTree();
 		WebDriverSingleton.closeDriver();
