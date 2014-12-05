@@ -387,7 +387,7 @@ public class HtmlDomTree
 	public static void main(String[] args) throws SAXException, IOException
 	{
 		WebDriverSingleton instance = WebDriverSingleton.getInstance();
-		String prefix = "C:\\Users\\ramgo\\Downloads\\internationalization\\page1.html";
+		String prefix = "C:\\Users\\Soumili\\Documents\\GitHub\\internationalization\\page1.html";
 		instance.loadPage(prefix);
 		WebDriver driver = instance.getDriver();
 		HtmlDomTree rt = new HtmlDomTree(driver, prefix);
