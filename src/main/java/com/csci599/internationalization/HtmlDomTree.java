@@ -8,6 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.xpath.XPathExpressionException;
 
@@ -317,7 +319,7 @@ public class HtmlDomTree
 		if(w == 0 || h == 0)
 			return false;
 		
-		if(fw > w || fh > h) 
+		if(fw > w || Math.abs(fh - h) >1) 
 			return true;
 		
 		return false;
@@ -330,8 +332,14 @@ public class HtmlDomTree
 		}
 		String text=node.getData().getText();
 		String xpath =  node.getData().getXpath();
-		//String fixedness = driver.findElement(By.xpath(xpath)).getCssValue("width")
-		String fsize = driver.findElement(By.xpath(xpath)).getCssValue("font-size");
+		//String fixedness = driver.findElement(By.xpath(xpath)).getCssValue("width");
+		WebElement curEle = driver.findElement(By.xpath(xpath));
+		String fsize = curEle.getCssValue("font-size");
+		String ftype = curEle.getCssValue("font-family");
+		int idx;
+		if((idx = ftype.indexOf(',')) != -1) {
+			ftype = ftype.substring(0, idx);
+		}
 				
 //		for (String key: node.getData().getCssProperties().keySet() ) {
 //			System.out.println("k: " + key +  " v: " + node.getData().getCssProperties().get(key) );
@@ -340,23 +348,41 @@ public class HtmlDomTree
 		if (text!=null && !text.isEmpty() && text != " ") {
 			text = text.trim();
 			String singleLineText = text.replace('\n', ' ');
+			
+			int lastIdx;
+			int fontSize = 0;
+			if(fsize != null) {
+				lastIdx = fsize.indexOf('p');
+				if (lastIdx == -1) 
+					lastIdx = 0;
+				fontSize = (int)Double.parseDouble(fsize.substring(0,lastIdx));
+			}
+			//Dimension d = fontanalyser.getTextDimenesion(text, ftype, fontSize, Font.PLAIN) ;
+			
 			boolean containsHTML = singleLineText.matches(".*\\<[^>]+>.*");
 			if (containsHTML) {
+				
 				//System.out.println("contains " + text);
-				//DO NOTHING
+				Pattern placeholder = Pattern.compile("<input.*placeholder=\"([^\"]+)\".*");
+				Matcher m = placeholder.matcher(singleLineText);
+				if (m.matches()) {
+					//System.out.println(m.group(1));
+					String placeHolder = m.group(1);
+					Dimension d = fontanalyser.getTextDimenesion(placeHolder, ftype, fontSize, Font.PLAIN) ;
+					if(elementOverflows(d.width, d.height, node.getData()
+							.getWidth(), node.getData().getHeight())) {
+						System.out.println("PLACE " + placeHolder);
+						System.out.println(text
+								+ " height: " + node.getData().getHeight()
+								+ " Width: " + node.getData().getWidth()
+								+ " fontHeight: " + d.height + " fontWidth: "
+								+ d.width);
+					}
+				}
 			}
 			else {
-				//System.out.println(text + " size " + fsize);
-				int lastIdx = 0;
-				int fontSize = 0;
-				if(fsize != null) {
-					lastIdx = fsize.indexOf('p');
-					if (lastIdx == -1) 
-						lastIdx = 0;
-					fontSize = (int)Double.parseDouble(fsize.substring(0,lastIdx));
-				}
-				
-				Dimension d = fontanalyser.getTextDimenesion(text, "Arial", fontSize, Font.PLAIN) ;
+				Dimension d = fontanalyser.getTextDimenesion(text, ftype, fontSize, Font.PLAIN) ;
+				//System.out.println(text + " size " + fsize);			
 				if(!text.equalsIgnoreCase("&nbsp;")) {
 					text = text.replaceAll("&nbsp;", " ");
 					
@@ -368,6 +394,7 @@ public class HtmlDomTree
 								+ " Width: " + node.getData().getWidth()
 								+ " fontHeight: " + d.height + " fontWidth: "
 								+ d.width);
+						//System.out.println(ftype);
 					}
 				}
 			}
@@ -383,16 +410,18 @@ public class HtmlDomTree
 		}
 	}	
 
-	
 	public static void main(String[] args) throws SAXException, IOException
 	{
+		long start = System.currentTimeMillis();
 		WebDriverSingleton instance = WebDriverSingleton.getInstance();
-		String prefix = "C:\\Users\\Soumili\\Documents\\GitHub\\internationalization\\page1.html";
+		// String prefix = "C:\\Users\\Soumili\\Documents\\GitHub\\internationalization\\page1.html";
+		String prefix = "C:\\Users\\ramgo\\Downloads\\internationalization\\page1.html";
 		instance.loadPage(prefix);
 		WebDriver driver = instance.getDriver();
 		HtmlDomTree rt = new HtmlDomTree(driver, prefix);
 		rt.buildHtmlDomTree();
 		rt.preOrderTraversalRTree();
 		WebDriverSingleton.closeDriver();
+		System.out.println("run time" + (System.currentTimeMillis() - start));
 	}
 }
