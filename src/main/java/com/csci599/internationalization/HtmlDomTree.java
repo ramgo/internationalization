@@ -31,7 +31,7 @@ public class HtmlDomTree
 		// parse CSS
 		this.driver = driver;
 		cssParser = new CSSParser(htmlFileFullPath);
-		cssParser.parseCSSWithInheritance();
+		cssParser.parseCSS();
 //		
 		// parse HTML attributes
 		htmlAttributesParser = new HtmlAttributesParser(htmlFileFullPath);
@@ -323,12 +323,7 @@ public class HtmlDomTree
 //		for (String key: node.getData().getCssProperties().keySet() ) {
 //			System.out.println("k: " + key +  " v: " + node.getData().getCssProperties().get(key) );
 //		}
-		
-		int fontSize = 0;
-		if(fsize != null) {
-			fontSize = Integer.parseInt(fsize.substring(0, fsize.indexOf('p')));
-			System.out.println("FONTSIZE " + fsize);
-		}
+
 		//RAMGO
 		if (text!=null && !text.isEmpty() && text != " ") {
 			text = text.trim();
@@ -339,18 +334,29 @@ public class HtmlDomTree
 			}
 			else {
 				System.out.println("not html " + text + " size " + fsize);
+				int lastIdx = 0;
+				int fontSize = 0;
+				if(fsize != null) {
+					lastIdx = fsize.indexOf('p');
+					if (lastIdx == -1) 
+						lastIdx = 0;
+					fontSize = (int)Double.parseDouble(fsize.substring(0,lastIdx));
+//					System.out.println("FONTSIZE " + fsize);
+				}
+				
+				Dimension d = fontanalyser.getTextDimenesion(text, "Arial", 13, Font.PLAIN) ;
+				if(!text.equalsIgnoreCase("&nbsp;")) {
+					System.out.println(node.getData().getTagName() + ": " + text
+							//+ " X: " + node.getData().getX() + " Y:"
+							//+ node.getData().getY()
+							+ " height: " + node.getData().getHeight() 
+							+ " Width: " + node.getData().getWidth()
+							+ " fontHeight: " + d.height
+							+ " fontWidth: " + d.width
+							);	
+				}
 			}
-//			Dimension d = fontanalyser.getTextDimenesion(text, "Arial", 13, Font.PLAIN) ;
-//			if(!containsHTML && text.equalsIgnoreCase("&nbsp;")) {
-//				System.out.println(node.getData().getTagName() + ": " + text
-//						//+ " X: " + node.getData().getX() + " Y:"
-//						//+ node.getData().getY()
-//						+ " height: " + node.getData().getHeight() 
-//						+ " Width: " + node.getData().getWidth()
-//						+ " fontHeight: " + d.height
-//						+ " fontWidth: " + d.width
-//						);	
-//			}
+
 		}
 		
 		if (node.getChildren() != null)
