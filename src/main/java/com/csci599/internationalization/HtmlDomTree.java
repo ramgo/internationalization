@@ -323,7 +323,7 @@ public class HtmlDomTree
 		if(w == 0 || h == 0)
 			return false;
 		
-		if(fw > w || Math.abs(fh - h) >1) 
+		if(fw > w || Math.abs(fh - h) <= 2) 
 			return true;
 		
 		return false;
