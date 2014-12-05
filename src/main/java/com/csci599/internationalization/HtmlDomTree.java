@@ -328,11 +328,24 @@ public class HtmlDomTree
 		
 		return false;
 	}
+	
+	private boolean wordWraps (int fw, int fh, int ow, int oh) {
+		
+		int threshold = 4;
+		if(Math.abs(fh - oh) > threshold) 
+			return true;
+		
+		return false;
+	}
+	
 	private void preOrderTraversalRTree(Node<HtmlElement> node)
 	{
 		if (node == null) {
 			System.out.println("Node==Null");
 			return;
+		}
+		if(node.getData().getTagName().equalsIgnoreCase("input")) {
+			System.out.println("INPUT XXX"+ node.getData().getText());
 		}
 		String text=node.getData().getText();
 		String xpath =  node.getData().getXpath();
@@ -367,9 +380,10 @@ public class HtmlDomTree
 			if (containsHTML) {
 				
 				//System.out.println("contains " + text);
-				Pattern placeholder = Pattern.compile("<input.*placeholder=\"([^\"]+)\".*");
+				Pattern placeholder = Pattern.compile(".*placeholder=\"([^\"]+)\".*");
 				Matcher m = placeholder.matcher(singleLineText);
-				if (m.matches()) {
+				
+				if (node.getData().getTagName().equalsIgnoreCase("input") && m.matches()) {
 					//System.out.println(m.group(1));
 					String placeHolder = m.group(1);
 					Dimension d = fontanalyser.getTextDimenesion(placeHolder, ftype, fontSize, Font.PLAIN) ;
@@ -398,8 +412,8 @@ public class HtmlDomTree
 						}catch(Exception e){
 							System.out.println("Missing Xpath from Oracle");
 						}
-						System.out.println("Oracle H,W "+ oracleHeight+oracleWidth+ "testedElement H,W: "+ node.getData().getHeight()+node.getData().getWidth());
-						if(elementOverflows(node.getData().getWidth(),node.getData().getHeight(), oracleWidth,oracleHeight)){
+						//System.out.println("Oracle H,W "+ oracleHeight+oracleWidth+ "testedElement H,W: "+ node.getData().getHeight()+node.getData().getWidth());
+						if(wordWraps(node.getData().getWidth(),node.getData().getHeight(), oracleWidth, oracleHeight)){
 							System.out.println("Possilble word wrapping for: "+text);
 						}
 						System.out.println(text
@@ -428,9 +442,10 @@ public class HtmlDomTree
 		long start = System.currentTimeMillis();
 		WebDriverSingleton instance = WebDriverSingleton.getInstance();
 		// String prefix = "C:\\Users\\Soumili\\Documents\\GitHub\\internationalization\\page1.html";
-		//String prefix = "C:\\Users\\ramgo\\Downloads\\internationalization\\page1.html";	
-		String prefix = "C:\\Users\\Ali\\Documents\\internationalization\\page1.html";
-		String prefix2 = "file:///C:\\Users\\Ali\\Documents\\internationalization\\oracle.html";
+		String prefix = "C:\\Users\\ramgo\\Downloads\\internationalization\\page1.html";
+		String prefix2 = "file:///C:\\Users\\ramgo\\Downloads\\internationalization\\oracle.html";
+//		String prefix = "C:\\Users\\Ali\\Documents\\internationalization\\page1.html";
+//		String prefix2 = "file:///C:\\Users\\Ali\\Documents\\internationalization\\oracle.html";
 		instance.loadPage(prefix);
 		WebDriver driver2 = new FirefoxDriver();
 		driver2.get(prefix2);
